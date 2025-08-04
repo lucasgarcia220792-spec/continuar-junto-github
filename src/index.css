@@ -111,8 +111,10 @@ All colors MUST be HSL.
 @layer components {
   /* Gaming Typography */
   .neon-text {
-    @apply text-transparent bg-clip-text;
+    color: transparent;
     background: linear-gradient(45deg, hsl(var(--neon-blue)), hsl(var(--neon-purple)), hsl(var(--neon-pink)));
+    background-clip: text;
+    -webkit-background-clip: text;
     text-shadow: 
       0 0 10px hsl(var(--neon-blue) / 0.5),
       0 0 20px hsl(var(--neon-purple) / 0.3),
@@ -121,8 +123,10 @@ All colors MUST be HSL.
   }
 
   .gold-text {
-    @apply text-transparent bg-clip-text;
+    color: transparent;
     background: linear-gradient(45deg, hsl(var(--gold)), hsl(45 100% 60%));
+    background-clip: text;
+    -webkit-background-clip: text;
     text-shadow: 
       0 0 10px hsl(var(--gold) / 0.6),
       0 0 20px hsl(var(--gold) / 0.4);

@@ -35,6 +35,24 @@ export function UserProfile({ onSignOut, refreshTrigger }: UserProfileProps) {
 
     if (error) {
       console.error('Error fetching profile:', error);
+    } else if (!data) {
+      // Se não existe perfil, criar um novo
+      const { data: newProfile, error: insertError } = await supabase
+        .from('profiles')
+        .insert({
+          user_id: user.id,
+          full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Jogador VIP',
+          username: user.user_metadata?.username || null,
+          balance: 0.00
+        })
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error('Error creating profile:', insertError);
+      } else {
+        setProfile(newProfile);
+      }
     } else {
       setProfile(data);
     }
