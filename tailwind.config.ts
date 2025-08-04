@@ -87,11 +87,19 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'scratch': {
+					'0%': { transform: 'scale(1) rotate(0deg)', opacity: '1' },
+					'25%': { transform: 'scale(0.95) rotate(-2deg)', opacity: '0.8' },
+					'50%': { transform: 'scale(0.9) rotate(1deg)', opacity: '0.6' },
+					'75%': { transform: 'scale(0.85) rotate(-1deg)', opacity: '0.4' },
+					'100%': { transform: 'scale(0.8) rotate(0deg)', opacity: '0.2' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'scratch': 'scratch 3s ease-in-out infinite'
 			}
 		}
 	},

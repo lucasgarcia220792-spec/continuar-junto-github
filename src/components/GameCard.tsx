@@ -31,13 +31,64 @@ export function GameCard({ onBetComplete }: GameCardProps) {
       return;
     }
 
+    // Verificar se o usuário tem saldo suficiente
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('balance')
+      .eq('user_id', user.id)
+      .single();
+
+    if (profileError) {
+      toast({
+        title: 'Erro',
+        description: 'Erro ao verificar saldo. Tente novamente.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    const currentBalance = profile?.balance || 0;
+    if (currentBalance < amount) {
+      toast({
+        title: 'Saldo insuficiente',
+        description: 'Você não tem saldo suficiente para esta aposta.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
     setIsPlaying(true);
     setGameResult(null);
 
-    // Simular o jogo - 40% chance de vitória
+    // Deduzir o valor da aposta do saldo
+    const newBalance = currentBalance - amount;
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update({ balance: newBalance })
+      .eq('user_id', user.id);
+
+    if (updateError) {
+      toast({
+        title: 'Erro',
+        description: 'Erro ao processar aposta. Tente novamente.',
+        variant: 'destructive'
+      });
+      setIsPlaying(false);
+      return;
+    }
+
+    // Simular o jogo - 40% chance de vitória (mas não mostrar para o usuário)
     const won = Math.random() < 0.4;
     const multiplier = won ? 2.5 : 0;
     const payout = won ? amount * multiplier : 0;
+
+    // Se ganhou, adicionar o prêmio ao saldo
+    if (won) {
+      await supabase
+        .from('profiles')
+        .update({ balance: newBalance + payout })
+        .eq('user_id', user.id);
+    }
 
     // Salvar aposta no banco
     const { error } = await supabase
@@ -142,13 +193,18 @@ export function GameCard({ onBetComplete }: GameCardProps) {
         {isPlaying && (
           <div className="text-center py-8">
             <div className="relative">
-              <div className="animate-spin w-20 h-20 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4 animate-neon-pulse"></div>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <Zap className="h-8 w-8 text-primary animate-pulse-glow" />
+              {/* Animação de Raspadinha */}
+              <div className="w-40 h-40 mx-auto relative bg-gradient-to-br from-gold via-yellow-400 to-gold rounded-xl border-4 border-gold/50 shadow-2xl overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-gray-400 via-gray-300 to-gray-400 animate-scratch">
+                  <div className="absolute inset-2 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
+                    <div className="text-6xl animate-bounce">🎰</div>
+                  </div>
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/10 to-transparent animate-shimmer"></div>
               </div>
             </div>
-            <p className="text-xl font-orbitron font-bold neon-text animate-pulse-glow">
-              GIRANDO A SORTE...
+            <p className="text-xl font-orbitron font-bold neon-text animate-pulse mt-4">
+              RASPANDO...
             </p>
             <p className="text-sm text-muted-foreground mt-2">
               Aguarde o resultado...
@@ -205,20 +261,17 @@ export function GameCard({ onBetComplete }: GameCardProps) {
         </Button>
 
         <div className="bg-muted/30 rounded-lg p-4 space-y-2">
-          <h4 className="font-orbitron font-bold text-center text-accent">ESTATÍSTICAS DO JOGO</h4>
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div className="text-center">
-              <Badge variant="outline" className="border-secondary/50 bg-secondary/10">
-                <TrendingUp className="mr-1 h-3 w-3" />
-                40% Vitória
-              </Badge>
-            </div>
-            <div className="text-center">
-              <Badge variant="outline" className="border-accent/50 bg-accent/10">
+          <h4 className="font-orbitron font-bold text-center text-accent">🎯 JOGO MISTERIOSO</h4>
+          <div className="text-center">
+            <div className="text-sm text-muted-foreground">
+              <Badge variant="outline" className="border-primary/50 bg-primary/10">
                 <Zap className="mr-1 h-3 w-3" />
-                2.5x Prêmio
+                Prêmio até 2.5x
               </Badge>
             </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              Teste sua sorte! Quanto maior a aposta, maior o prêmio!
+            </p>
           </div>
         </div>
       </CardContent>
