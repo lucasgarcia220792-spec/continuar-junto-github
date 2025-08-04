@@ -309,21 +309,16 @@ export function GameCard({ onBetComplete }: GameCardProps) {
         </Button>
 
         <div className="bg-muted/30 rounded-lg p-4 space-y-3">
-          <h4 className="font-orbitron font-bold text-center text-accent">🎯 PROBABILIDADES DE VITÓRIA</h4>
-          <div className="space-y-2">
+          <h4 className="font-orbitron font-bold text-center text-accent">🎯 MULTIPLICADORES DISPONÍVEIS</h4>
+          <div className="grid grid-cols-5 gap-2">
             {Object.entries(multiplierConfig).map(([mult, config]) => (
-              <div key={mult} className="flex justify-between items-center text-sm">
-                <Badge variant="outline" className={`border-accent/50 ${config.color} text-white`}>
-                  {config.label}
-                </Badge>
-                <span className="text-muted-foreground">
-                  {Math.round(config.chance * 100)}% chance
-                </span>
-              </div>
+              <Badge key={mult} variant="outline" className={`${config.color} text-white justify-center py-2`}>
+                {config.label}
+              </Badge>
             ))}
           </div>
           <p className="text-xs text-muted-foreground text-center mt-2">
-            Quanto maior o multiplicador, menor a chance de vitória!
+            Escolha seu multiplicador e teste sua sorte! 🍀
           </p>
         </div>
       </CardContent>
