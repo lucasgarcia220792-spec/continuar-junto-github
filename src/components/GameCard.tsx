@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { Zap, Target, TrendingUp, Coins } from 'lucide-react';
 
 interface GameCardProps {
   onBetComplete: () => void;
@@ -70,22 +72,31 @@ export function GameCard({ onBetComplete }: GameCardProps) {
         description: won 
           ? `Parabéns! Você ganhou R$ ${payout.toFixed(2)}` 
           : `Que pena! Você perdeu R$ ${amount.toFixed(2)}`,
-        variant: won ? 'default' : 'destructive'
+        variant: won ? 'default' : 'destructive',
+        className: won ? 'border-secondary' : ''
       });
-    }, 2000);
+    }, 3000);
   };
 
   return (
-    <Card className="w-full max-w-md">
-      <CardHeader className="text-center">
-        <CardTitle className="text-2xl">🎰 Jogo da Sorte</CardTitle>
-        <CardDescription>
-          Faça sua aposta e teste sua sorte!
+    <Card className="gaming-card w-full max-w-md border-primary/30 relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 pointer-events-none"></div>
+      
+      <CardHeader className="text-center relative z-10">
+        <CardTitle className="text-3xl font-orbitron neon-text floating">
+          🎰 JOGO DA SORTE
+        </CardTitle>
+        <CardDescription className="text-lg font-medium">
+          Teste sua sorte e ganhe grandes prêmios!
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Valor da aposta (R$)</label>
+      
+      <CardContent className="space-y-6 relative z-10">
+        <div className="space-y-3">
+          <label className="text-sm font-medium flex items-center gap-2">
+            <Coins className="h-4 w-4 text-accent" />
+            Valor da aposta (R$)
+          </label>
           <Input
             type="number"
             step="0.01"
@@ -94,43 +105,121 @@ export function GameCard({ onBetComplete }: GameCardProps) {
             value={betAmount}
             onChange={(e) => setBetAmount(e.target.value)}
             disabled={isPlaying}
+            className="text-center text-2xl font-bold border-primary/30 focus:border-primary bg-background/50 backdrop-blur"
           />
+          
+          <div className="grid grid-cols-3 gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-accent/50 hover:bg-accent/10 font-orbitron"
+              onClick={() => setBetAmount('10')}
+              disabled={isPlaying}
+            >
+              R$ 10
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-accent/50 hover:bg-accent/10 font-orbitron"
+              onClick={() => setBetAmount('50')}
+              disabled={isPlaying}
+            >
+              R$ 50
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-accent/50 hover:bg-accent/10 font-orbitron"
+              onClick={() => setBetAmount('100')}
+              disabled={isPlaying}
+            >
+              R$ 100
+            </Button>
+          </div>
         </div>
 
         {isPlaying && (
           <div className="text-center py-8">
-            <div className="animate-spin w-16 h-16 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
-            <p className="text-lg font-medium">Rodando o jogo...</p>
+            <div className="relative">
+              <div className="animate-spin w-20 h-20 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4 animate-neon-pulse"></div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Zap className="h-8 w-8 text-primary animate-pulse-glow" />
+              </div>
+            </div>
+            <p className="text-xl font-orbitron font-bold neon-text animate-pulse-glow">
+              GIRANDO A SORTE...
+            </p>
+            <p className="text-sm text-muted-foreground mt-2">
+              Aguarde o resultado...
+            </p>
           </div>
         )}
 
         {gameResult && (
-          <div className={`text-center py-4 rounded-lg ${
-            gameResult.won ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+          <div className={`text-center py-6 rounded-xl relative overflow-hidden ${
+            gameResult.won 
+              ? 'bg-secondary/20 border border-secondary/40' 
+              : 'bg-destructive/20 border border-destructive/40'
           }`}>
-            <p className="text-lg font-bold">
-              {gameResult.won ? '🎉 VITÓRIA!' : '😔 DERROTA!'}
-            </p>
-            <p className="text-sm">
-              {gameResult.won 
-                ? `Multiplicador: ${gameResult.multiplier}x | Prêmio: R$ ${gameResult.payout.toFixed(2)}`
-                : 'Tente novamente na próxima!'
-              }
-            </p>
+            <div className="absolute inset-0 animate-pulse opacity-20 bg-current"></div>
+            <div className="relative z-10">
+              <p className="text-2xl font-orbitron font-black mb-2">
+                {gameResult.won ? '🎉 VITÓRIA ÉPICA!' : '💀 TENTE NOVAMENTE!'}
+              </p>
+              <p className="text-lg font-medium">
+                {gameResult.won 
+                  ? (
+                    <>
+                      <span className="gold-text font-bold">Multiplicador: {gameResult.multiplier}x</span>
+                      <br />
+                      <span className="text-secondary font-bold">Prêmio: R$ {gameResult.payout.toFixed(2)}</span>
+                    </>
+                  )
+                  : 'A sorte está chegando!'
+                }
+              </p>
+            </div>
           </div>
         )}
 
         <Button 
           onClick={playGame} 
-          className="w-full"
+          className="w-full gaming-button font-orbitron font-bold text-xl py-8 relative overflow-hidden group"
           disabled={isPlaying || !betAmount}
         >
-          {isPlaying ? 'Jogando...' : 'Apostar'}
+          <div className="absolute inset-0 bg-gradient-to-r from-primary via-secondary to-accent opacity-20 animate-pulse-glow"></div>
+          <div className="relative z-10 flex items-center justify-center gap-3">
+            {isPlaying ? (
+              <>
+                <div className="animate-spin w-5 h-5 border-2 border-current border-t-transparent rounded-full"></div>
+                GIRANDO...
+              </>
+            ) : (
+              <>
+                <Target className="h-6 w-6" />
+                APOSTAR AGORA
+              </>
+            )}
+          </div>
         </Button>
 
-        <div className="text-xs text-muted-foreground text-center">
-          <p>Probabilidade de vitória: 40%</p>
-          <p>Multiplicador de vitória: 2.5x</p>
+        <div className="bg-muted/30 rounded-lg p-4 space-y-2">
+          <h4 className="font-orbitron font-bold text-center text-accent">ESTATÍSTICAS DO JOGO</h4>
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div className="text-center">
+              <Badge variant="outline" className="border-secondary/50 bg-secondary/10">
+                <TrendingUp className="mr-1 h-3 w-3" />
+                40% Vitória
+              </Badge>
+            </div>
+            <div className="text-center">
+              <Badge variant="outline" className="border-accent/50 bg-accent/10">
+                <Zap className="mr-1 h-3 w-3" />
+                2.5x Prêmio
+              </Badge>
+            </div>
+          </div>
         </div>
       </CardContent>
     </Card>

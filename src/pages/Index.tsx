@@ -28,17 +28,22 @@ const Index = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center space-y-6">
-          <div>
-            <h1 className="text-4xl font-bold mb-4">🎰 Bet Win Spark</h1>
-            <p className="text-xl text-muted-foreground mb-6">
-              A plataforma de apostas mais emocionante!
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-8">
+          <div className="space-y-4">
+            <h1 className="text-6xl font-orbitron font-black neon-text floating">
+              🎰 BET WIN SPARK
+            </h1>
+            <p className="text-2xl font-medium gold-text pulse-glow">
+              A plataforma de apostas mais emocionante do universo!
+            </p>
+            <p className="text-lg text-muted-foreground">
+              Junte-se a milhares de jogadores e ganhe prêmios incríveis
             </p>
           </div>
           <Link to="/auth">
-            <Button size="lg" className="px-8">
-              Entrar / Cadastrar
+            <Button className="gaming-button font-orbitron font-bold text-2xl px-12 py-8 animate-neon-pulse">
+              🚀 ENTRAR NO JOGO
             </Button>
           </Link>
         </div>
@@ -47,11 +52,15 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
       <div className="container mx-auto px-4 py-8">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold mb-2">🎰 Bet Win Spark</h1>
-          <p className="text-muted-foreground">Faça suas apostas e ganhe prêmios incríveis!</p>
+        <div className="text-center mb-12">
+          <h1 className="text-5xl font-orbitron font-black neon-text floating mb-4">
+            🎰 BET WIN SPARK
+          </h1>
+          <p className="text-xl gold-text pulse-glow">
+            Faça suas apostas e ganhe prêmios épicos!
+          </p>
         </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
