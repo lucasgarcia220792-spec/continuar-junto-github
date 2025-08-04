@@ -8,17 +8,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { CreditCard, DollarSign, Zap, TrendingUp } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 interface DepositWithdrawDialogProps {
   onTransactionComplete: () => void;
 }
 
 export function DepositWithdrawDialog({ onTransactionComplete }: DepositWithdrawDialogProps) {
+  const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleDeposit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!user) return;
+    
     setIsLoading(true);
 
     const formData = new FormData(e.currentTarget);
@@ -34,21 +39,53 @@ export function DepositWithdrawDialog({ onTransactionComplete }: DepositWithdraw
       return;
     }
 
-    // Simular processamento do depósito
-    setTimeout(() => {
+    try {
+      // Buscar o saldo atual
+      const { data: profile, error: fetchError } = await supabase
+        .from('profiles')
+        .select('balance')
+        .eq('user_id', user.id)
+        .single();
+
+      if (fetchError) {
+        throw fetchError;
+      }
+
+      // Atualizar o saldo com o depósito
+      const newBalance = (profile?.balance || 0) + amount;
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ balance: newBalance })
+        .eq('user_id', user.id);
+
+      if (updateError) {
+        throw updateError;
+      }
+
       toast({
         title: '💰 Depósito realizado!',
         description: `R$ ${amount.toFixed(2)} foi adicionado à sua conta.`,
         className: 'border-secondary'
       });
+      
       onTransactionComplete();
       setIsOpen(false);
+    } catch (error) {
+      console.error('Erro no depósito:', error);
+      toast({
+        title: 'Erro no depósito',
+        description: 'Não foi possível processar o depósito. Tente novamente.',
+        variant: 'destructive'
+      });
+    } finally {
       setIsLoading(false);
-    }, 2000);
+    }
   };
 
   const handleWithdraw = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!user) return;
+    
     setIsLoading(true);
 
     const formData = new FormData(e.currentTarget);
@@ -64,17 +101,59 @@ export function DepositWithdrawDialog({ onTransactionComplete }: DepositWithdraw
       return;
     }
 
-    // Simular processamento do saque
-    setTimeout(() => {
+    try {
+      // Buscar o saldo atual
+      const { data: profile, error: fetchError } = await supabase
+        .from('profiles')
+        .select('balance')
+        .eq('user_id', user.id)
+        .single();
+
+      if (fetchError) {
+        throw fetchError;
+      }
+
+      const currentBalance = profile?.balance || 0;
+      
+      if (currentBalance < amount) {
+        toast({
+          title: 'Saldo insuficiente',
+          description: 'Você não tem saldo suficiente para este saque.',
+          variant: 'destructive'
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      // Atualizar o saldo subtraindo o saque
+      const newBalance = currentBalance - amount;
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ balance: newBalance })
+        .eq('user_id', user.id);
+
+      if (updateError) {
+        throw updateError;
+      }
+
       toast({
-        title: '💸 Saque solicitado!',
-        description: `R$ ${amount.toFixed(2)} será processado em até 24h.`,
+        title: '💸 Saque realizado!',
+        description: `R$ ${amount.toFixed(2)} foi retirado da sua conta.`,
         className: 'border-accent'
       });
+      
       onTransactionComplete();
       setIsOpen(false);
+    } catch (error) {
+      console.error('Erro no saque:', error);
+      toast({
+        title: 'Erro no saque',
+        description: 'Não foi possível processar o saque. Tente novamente.',
+        variant: 'destructive'
+      });
+    } finally {
       setIsLoading(false);
-    }, 2000);
+    }
   };
 
   return (
