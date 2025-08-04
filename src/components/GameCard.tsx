@@ -14,9 +14,19 @@ interface GameCardProps {
 
 export function GameCard({ onBetComplete }: GameCardProps) {
   const [betAmount, setBetAmount] = useState('');
+  const [selectedMultiplier, setSelectedMultiplier] = useState(2);
   const [isPlaying, setIsPlaying] = useState(false);
   const [gameResult, setGameResult] = useState<{ won: boolean; multiplier: number; payout: number } | null>(null);
   const { user } = useAuth();
+
+  // Configuração de probabilidades (mantendo house edge de ~10%)
+  const multiplierConfig = {
+    1.5: { chance: 0.60, label: '1.5x', color: 'bg-green-500' },
+    2: { chance: 0.45, label: '2x', color: 'bg-blue-500' },
+    3: { chance: 0.30, label: '3x', color: 'bg-yellow-500' },
+    5: { chance: 0.18, label: '5x', color: 'bg-orange-500' },
+    10: { chance: 0.09, label: '10x', color: 'bg-red-500' }
+  };
 
   const playGame = async () => {
     if (!user) return;
@@ -77,9 +87,10 @@ export function GameCard({ onBetComplete }: GameCardProps) {
       return;
     }
 
-    // Simular o jogo - 40% chance de vitória (mas não mostrar para o usuário)
-    const won = Math.random() < 0.4;
-    const multiplier = won ? 2.5 : 0;
+    // Usar o multiplicador e chance selecionados pelo usuário
+    const selectedConfig = multiplierConfig[selectedMultiplier as keyof typeof multiplierConfig];
+    const won = Math.random() < selectedConfig.chance;
+    const multiplier = won ? selectedMultiplier : 0;
     const payout = won ? amount * multiplier : 0;
 
     // Se ganhou, adicionar o prêmio ao saldo
@@ -143,50 +154,87 @@ export function GameCard({ onBetComplete }: GameCardProps) {
       </CardHeader>
       
       <CardContent className="space-y-6 relative z-10">
-        <div className="space-y-3">
-          <label className="text-sm font-medium flex items-center gap-2">
-            <Coins className="h-4 w-4 text-accent" />
-            Valor da aposta (R$)
-          </label>
-          <Input
-            type="number"
-            step="0.01"
-            min="0.01"
-            placeholder="0.00"
-            value={betAmount}
-            onChange={(e) => setBetAmount(e.target.value)}
-            disabled={isPlaying}
-            className="text-center text-2xl font-bold border-primary/30 focus:border-primary bg-background/50 backdrop-blur"
-          />
-          
-          <div className="grid grid-cols-3 gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="border-accent/50 hover:bg-accent/10 font-orbitron"
-              onClick={() => setBetAmount('10')}
+        <div className="space-y-4">
+          <div className="space-y-3">
+            <label className="text-sm font-medium flex items-center gap-2">
+              <Coins className="h-4 w-4 text-accent" />
+              Valor da aposta (R$)
+            </label>
+            <Input
+              type="number"
+              step="0.01"
+              min="0.01"
+              placeholder="0.00"
+              value={betAmount}
+              onChange={(e) => setBetAmount(e.target.value)}
               disabled={isPlaying}
-            >
-              R$ 10
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="border-accent/50 hover:bg-accent/10 font-orbitron"
-              onClick={() => setBetAmount('50')}
-              disabled={isPlaying}
-            >
-              R$ 50
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="border-accent/50 hover:bg-accent/10 font-orbitron"
-              onClick={() => setBetAmount('100')}
-              disabled={isPlaying}
-            >
-              R$ 100
-            </Button>
+              className="text-center text-2xl font-bold border-primary/30 focus:border-primary bg-background/50 backdrop-blur"
+            />
+            
+            <div className="grid grid-cols-3 gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-accent/50 hover:bg-accent/10 font-orbitron"
+                onClick={() => setBetAmount('10')}
+                disabled={isPlaying}
+              >
+                R$ 10
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-accent/50 hover:bg-accent/10 font-orbitron"
+                onClick={() => setBetAmount('50')}
+                disabled={isPlaying}
+              >
+                R$ 50
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-accent/50 hover:bg-accent/10 font-orbitron"
+                onClick={() => setBetAmount('100')}
+                disabled={isPlaying}
+              >
+                R$ 100
+              </Button>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <label className="text-sm font-medium flex items-center gap-2">
+              <TrendingUp className="h-4 w-4 text-primary" />
+              Multiplicador de Prêmio
+            </label>
+            <div className="grid grid-cols-5 gap-2">
+              {Object.entries(multiplierConfig).map(([mult, config]) => (
+                <Button
+                  key={mult}
+                  variant={selectedMultiplier === parseFloat(mult) ? "default" : "outline"}
+                  size="sm"
+                  className={`font-orbitron font-bold ${
+                    selectedMultiplier === parseFloat(mult) 
+                      ? 'gaming-button text-white' 
+                      : 'border-primary/30 hover:bg-primary/10'
+                  }`}
+                  onClick={() => setSelectedMultiplier(parseFloat(mult))}
+                  disabled={isPlaying}
+                >
+                  {config.label}
+                </Button>
+              ))}
+            </div>
+            <div className="text-center p-3 bg-muted/30 rounded-lg">
+              <p className="text-sm font-medium">
+                Multiplicador selecionado: <span className="text-primary font-bold">{selectedMultiplier}x</span>
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Prêmio potencial: <span className="text-accent font-bold">
+                  R$ {betAmount ? (parseFloat(betAmount) * selectedMultiplier).toFixed(2) : '0.00'}
+                </span>
+              </p>
+            </div>
           </div>
         </div>
 
@@ -260,19 +308,23 @@ export function GameCard({ onBetComplete }: GameCardProps) {
           </div>
         </Button>
 
-        <div className="bg-muted/30 rounded-lg p-4 space-y-2">
-          <h4 className="font-orbitron font-bold text-center text-accent">🎯 JOGO MISTERIOSO</h4>
-          <div className="text-center">
-            <div className="text-sm text-muted-foreground">
-              <Badge variant="outline" className="border-primary/50 bg-primary/10">
-                <Zap className="mr-1 h-3 w-3" />
-                Prêmio até 2.5x
-              </Badge>
-            </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              Teste sua sorte! Quanto maior a aposta, maior o prêmio!
-            </p>
+        <div className="bg-muted/30 rounded-lg p-4 space-y-3">
+          <h4 className="font-orbitron font-bold text-center text-accent">🎯 PROBABILIDADES DE VITÓRIA</h4>
+          <div className="space-y-2">
+            {Object.entries(multiplierConfig).map(([mult, config]) => (
+              <div key={mult} className="flex justify-between items-center text-sm">
+                <Badge variant="outline" className={`border-accent/50 ${config.color} text-white`}>
+                  {config.label}
+                </Badge>
+                <span className="text-muted-foreground">
+                  {Math.round(config.chance * 100)}% chance
+                </span>
+              </div>
+            ))}
           </div>
+          <p className="text-xs text-muted-foreground text-center mt-2">
+            Quanto maior o multiplicador, menor a chance de vitória!
+          </p>
         </div>
       </CardContent>
     </Card>
